@@ -3,7 +3,7 @@ import os
 from dataset_tools.convert import unpack_if_archive
 import src.settings as s
 from urllib.parse import unquote, urlparse
-from supervisely.io.fs import get_file_name, get_file_size
+from supervisely.io.fs import get_file_name, get_file_ext, file_exists
 import shutil
 
 from tqdm import tqdm
@@ -70,16 +70,142 @@ def convert_and_upload_supervisely_project(
     api: sly.Api, workspace_id: int, project_name: str
 ) -> sly.ProjectInfo:
     ### Function should read local dataset and upload it to Supervisely project, then return project info.###
-    raise NotImplementedError("The converter should be implemented manually.")
+    label_data_path = os.path.join("robo","img","img")
+    no_label_data_path = os.path.join("robo","NegativeImages_raw")
+    batch_size = 30
+    images_ext = ".jpg"
+    masks_ext = ".txt"
+    
 
-    # dataset_path = "/local/path/to/your/dataset" # general way
-    # dataset_path = download_dataset(teamfiles_dir) # for large datasets stored on instance
+    def create_ann(image_path):
+        labels = []
 
-    # ... some code here ...
+        camera_value_index = get_file_name(image_path).split("_")[0]
+        camera_value = index_to_camera.get(camera_value_index)
+        if camera_value is None:
+            camera_value = "arbitrary_device"
+        camera = sly.Tag(tag_camera, value=camera_value)
 
-    # sly.logger.info('Deleting temporary app storage files...')
-    # shutil.rmtree(storage_dir)
+        image_np = sly.imaging.image.read(image_path)[:, :, 0]
+        img_height = image_np.shape[0]
+        img_wight = image_np.shape[1]
 
-    # return project
+        mask_path = os.path.join(label_data_path, get_file_name(image_path) + masks_ext)
+
+        if file_exists(mask_path):
+            with open(mask_path) as f:
+                content = f.read().split("\n")
+
+                for curr_data in content:
+                    if len(curr_data) != 0:
+                        curr_data = list(map(float, curr_data.split(" ")))
+
+                        left = int((curr_data[1] - curr_data[3] / 2) * img_wight)
+                        right = int((curr_data[1] + curr_data[3] / 2) * img_wight)
+                        top = int((curr_data[2] - curr_data[4] / 2) * img_height)
+                        bottom = int((curr_data[2] + curr_data[4] / 2) * img_height)
+                        rectangle = sly.Rectangle(top=top, left=left, bottom=bottom, right=right)
+                        label = sly.Label(rectangle, obj_class)
+                        labels.append(label)
+        if not labels:
+            print(get_file_name(image_path))
+
+        return sly.Annotation(img_size=(img_height, img_wight), labels=labels, img_tags=[camera])
 
 
+    obj_class = sly.ObjClass("pot", sly.Rectangle)
+
+    tag_camera = sly.TagMeta(
+        "camera",
+        sly.TagValueType.ONEOF_STRING,
+        possible_values=["realsence_d455", "azure_kinect", "realsence_l515_lidar", "arbitrary_device"],
+    )
+    tag_subfolder = sly.TagMeta("subfolder", sly.TagValueType.ANY_STRING)
+
+    index_to_camera = {
+        "D455": "realsence_d455",
+        "K4A": "azure_kinect",
+        "L515": "realsence_l515_lidar",
+    }
+
+    project = api.project.create(workspace_id, project_name, change_name_if_conflict=True)
+    meta = sly.ProjectMeta(
+        obj_classes=[obj_class],
+        tag_metas=[tag_camera, tag_subfolder],
+    )
+    api.project.update_meta(project.id, meta.to_json())
+
+    images_names = [
+        im_name for im_name in os.listdir(label_data_path) if get_file_ext(im_name) == images_ext
+    ]
+
+    ds_name = "labelled"
+
+    dataset = api.dataset.create(project.id, ds_name, change_name_if_conflict=True)
+
+    progress = sly.Progress("Create dataset {}".format(ds_name), len(images_names))
+
+    for img_names_batch in sly.batched(images_names, batch_size=batch_size):
+        images_pathes_batch = [
+            os.path.join(label_data_path, image_path) for image_path in img_names_batch
+        ]
+
+        img_infos = api.image.upload_paths(dataset.id, img_names_batch, images_pathes_batch)
+        img_ids = [im_info.id for im_info in img_infos]
+
+        anns_batch = [create_ann(image_path) for image_path in images_pathes_batch]
+        api.annotation.upload_anns(img_ids, anns_batch)
+
+        progress.iters_done_report(len(img_names_batch))
+
+
+    def create_ann_neg(image_path):
+        labels = []
+
+        sub = sly.Tag(tag_subfolder, value=subfolder)
+
+        camera_value_index = get_file_name(image_path).split("_")[0]
+        camera_value = index_to_camera.get(camera_value_index)
+        if camera_value is None:
+            camera_value = "arbitrary_device"
+        camera = sly.Tag(tag_camera, value=camera_value)
+
+        image_np = sly.imaging.image.read(image_path)[:, :, 0]
+        img_height = image_np.shape[0]
+        img_wight = image_np.shape[1]
+
+        return sly.Annotation(
+            img_size=(img_height, img_wight), labels=labels, img_tags=[camera, sub]
+        )
+
+
+    ds_name = "negativeimages_raw"
+
+    dataset = api.dataset.create(project.id, ds_name, change_name_if_conflict=True)
+
+    progress = sly.Progress("Create dataset {}".format(ds_name), len(images_names))
+
+    for subfolder in os.listdir(no_label_data_path):
+        images_path = os.path.join(no_label_data_path, subfolder)
+        images_names = os.listdir(images_path)
+
+        progress = sly.Progress(
+            "Create dataset {}, add {} data".format(ds_name, subfolder), len(images_names)
+        )
+
+        for img_names_batch in sly.batched(images_names, batch_size=batch_size):
+            images_pathes_batch = [
+                os.path.join(images_path, image_path) for image_path in img_names_batch
+            ]
+
+            img_names_batch = [subfolder + "_" + im_name for im_name in img_names_batch]
+
+            img_infos = api.image.upload_paths(dataset.id, img_names_batch, images_pathes_batch)
+            img_ids = [im_info.id for im_info in img_infos]
+
+            anns_batch = [create_ann_neg(image_path) for image_path in images_pathes_batch]
+            api.annotation.upload_anns(img_ids, anns_batch)
+
+            progress.iters_done_report(len(img_names_batch))
+    
+    return project
