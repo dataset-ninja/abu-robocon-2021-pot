@@ -62,7 +62,7 @@ ORGANIZATION_NAME: Optional[Union[str, List[str]]] = ["PolyU FENG Robotics Team"
 ORGANIZATION_URL: Optional[Union[str, List[str]]] = ["https://github.com/PolyU-Robocon"]
 
 # Set '__PRETEXT__' or '__POSTTEXT__' as a key with string value to add custom text. e.g. SLYTAGSPLIT = {'__POSTTEXT__':'some text}
-SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = ["__POSTTEXT__":"Also, the dataset contains ***camera*** tag, *negativeimages_raw* split also contains ***subfolder*** tag"]
+SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = {"__POSTTEXT__":"Also, the dataset contains ***camera*** tag, *negativeimages_raw* split also contains ***subfolder*** tag"}
 TAGS: Optional[List[str]] = None
 
 
