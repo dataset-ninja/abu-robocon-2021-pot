@@ -57,6 +57,7 @@ REPOSITORY: Optional[Union[str, List[str], Dict[str, str]]] = None
 
 CITATION_URL: Optional[str] = "https://www.kaggle.com/datasets/vinesmsuic/abu-robocon-2021-pot-dataset"
 AUTHORS: Optional[List[str]] = ["Wing-Fung Ku"]
+AUTHORS_CONTACTS: Optional[List[str]] = ["https://kuwingfung.github.io/", "wingfku2@gmail.com"]
 
 ORGANIZATION_NAME: Optional[Union[str, List[str]]] = ["PolyU FENG Robotics Team"]
 ORGANIZATION_URL: Optional[Union[str, List[str]]] = ["https://github.com/PolyU-Robocon"]
@@ -110,6 +111,7 @@ def get_settings():
     settings["repository"] = REPOSITORY
     settings["citation_url"] = CITATION_URL
     settings["authors"] = AUTHORS
+    settings["authors_contacts"] = AUTHORS_CONTACTS
     settings["organization_name"] = ORGANIZATION_NAME
     settings["organization_url"] = ORGANIZATION_URL
     settings["slytagsplit"] = SLYTAGSPLIT
