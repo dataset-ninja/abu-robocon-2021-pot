@@ -43,7 +43,7 @@ GITHUB_URL: str = "https://github.com/dataset-ninja/abu-robocon-2021-pot"
 ##################################
 ### * Optional after uploading ###
 ##################################
-DOWNLOAD_ORIGINAL_URL: Optional[Union[str, dict]] = ["https://www.kaggle.com/datasets/vinesmsuic/abu-robocon-2021-pot-dataset"]
+DOWNLOAD_ORIGINAL_URL: Optional[Union[str, dict]] = "https://www.kaggle.com/datasets/vinesmsuic/abu-robocon-2021-pot-dataset"
 # Optional link for downloading original dataset (e.g. "https://some.com/dataset/download")
 
 CLASS2COLOR: Optional[Dict[str, List[str]]] = None
@@ -63,7 +63,7 @@ ORGANIZATION_NAME: Optional[Union[str, List[str]]] = ["PolyU FENG Robotics Team"
 ORGANIZATION_URL: Optional[Union[str, List[str]]] = ["https://github.com/PolyU-Robocon"]
 
 # Set '__PRETEXT__' or '__POSTTEXT__' as a key with string value to add custom text. e.g. SLYTAGSPLIT = {'__POSTTEXT__':'some text}
-SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = {"__POSTTEXT__":"Also, the dataset contains ***camera*** tag, *negativeimages_raw* split also contains ***subfolder*** tag"}
+SLYTAGSPLIT: Optional[Dict[str, Union[List[str], str]]] = {"__POSTTEXT__":"Also, the dataset contains ***camera*** tag, *negativeimages_raw* split also contains ***year*** tag"}
 TAGS: Optional[List[str]] = None
 
 
