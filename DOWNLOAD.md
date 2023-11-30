@@ -1,6 +1,6 @@
 Dataset **ABU Robocon 2021 Pot** can be downloaded in [Supervisely format](https://developer.supervisely.com/api-references/supervisely-annotation-json-format):
 
- [Download](https://assets.supervisely.com/supervisely-supervisely-assets-public/teams_storage/k/x/h1/jrDwnWGsrgA3ArIj2sMU8KBAztcEn17C3Iqe14J9ovaGJjJsHIvL1Gc8zmWOhWRCtxUvbkpy6eq1DIWY3ydgn4bU59lCBRQUYNRiwM8EL5i2johT5FD6f3VaCb5p.tar)
+ [Download](https://www.dropbox.com/scl/fi/jlh5aha5ealnyn0skt4pb/abu-robocon-2021-pot-DatasetNinja.tar?rlkey=pmnaqib8703a16gxkdo2gk4tf&dl=1)
 
 As an alternative, it can be downloaded with *dataset-tools* package:
 ``` bash
